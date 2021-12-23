@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "deno",
+			"command": "run",
+			"args": [
+				"--allow-env=AIRTABLE_BASE_ID,AIRTABLE_API_KEY",
+				"--allow-net=api.airtable.com",
+				"--allow-write=./public",
+				"./src/app.ts"
+			],
+			"problemMatcher": [
+				"$deno"
+			],
+			"label": "deno: run"
+		}
+	]
+}
