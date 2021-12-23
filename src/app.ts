@@ -2,6 +2,7 @@ import {
   brightGreen,
   cyan,
   italic,
+  red,
   yellow,
 } from "https://deno.land/std@0.119.0/fmt/colors.ts";
 import { sleep } from "https://deno.land/x/sleep/mod.ts";
@@ -17,6 +18,7 @@ async function getAirtableData(
   delay = 0.2,
   outputDir = "./public",
 ): Promise<void> {
+  console.log(`Records will be written to ${cyan(outputDir)}`);
   console.log(
     `Connecting to ${cyan(`https://api.airtable.com/v0/${baseId}`)} …`,
   );
@@ -47,9 +49,15 @@ async function getAirtableData(
     console.log(
       `🗄✨ ${italic(brightGreen(res.length.toString()))} records retrieved.`,
     );
-  }
 
-  console.log(`Records will be written to ${cyan(outputDir)}`);
+    // Write the data to a file
+    const fileName = `${outputDir}/${table}.json`;
+    try {
+      Deno.writeTextFileSync(fileName, JSON.stringify(res));
+    } catch (e) {
+      console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
+    }
+  }
 }
 
 async function* allRecords(
