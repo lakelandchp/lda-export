@@ -54,7 +54,6 @@ async function getAirtableData(
       `🗄✨ ${italic(brightGreen(res.length.toString()))} records retrieved.`,
     );
 
-    // Write the raw Airtable data to file
     if (!airtableData.get(table)) {
       airtableData.set(table, res);
     } else {
@@ -62,6 +61,7 @@ async function getAirtableData(
       airtableData.set(table, res);
     }
 
+    // Write the raw Airtable data to file before we finish
     const rawPath = join(outputDir, "raw");
     ensureDirSync(rawPath);
     const fileName = `${rawPath}/${table}.json`;
@@ -115,6 +115,7 @@ async function* allRecords(
     offset = jsonData.offset;
     yield new Promise<AirtableRecord[]>((resolve) => resolve(jsonData.records));
 
+    // Don't hit the API too fast
     if (offset && delay) {
       await sleep(delay);
     }
@@ -133,5 +134,7 @@ const webTables = ["Items", "Lakeland_Book"];
 if (base && key) {
   getAirtableData(base, webTables, key, 60, "curl/7.77.0");
 } else {
-  console.error("Error: AIRTABLE_BASE_ID and AIRTABLE_API_KEY must be set");
+  console.error(
+    red("Error: AIRTABLE_BASE_ID and AIRTABLE_API_KEY must be set"),
+  );
 }
