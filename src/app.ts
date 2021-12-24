@@ -24,6 +24,9 @@ async function getAirtableData(
     `Connecting to ${cyan(`https://api.airtable.com/v0/${baseId}`)} …`,
   );
 
+  const airtableData = new Map<string, AirtableRecord[]>();
+
+  // Main loop over all tables
   for (const table of tables) {
     console.log(`Fetching ${yellow(table)} …`);
     // The function allRecords() returns a generator that yields  a "page" of
@@ -52,11 +55,18 @@ async function getAirtableData(
     );
 
     // Write the raw Airtable data to file
+    if (!airtableData.get(table)) {
+      airtableData.set(table, res);
+    } else {
+      console.warn(`Data already exists for ${table}. Overwriting.…`);
+      airtableData.set(table, res);
+    }
+
     const rawPath = join(outputDir, "raw");
     ensureDirSync(rawPath);
     const fileName = `${rawPath}/${table}.json`;
     try {
-      Deno.writeTextFileSync(fileName, JSON.stringify(res));
+      Deno.writeTextFileSync(fileName, JSON.stringify(airtableData.get(table)));
     } catch (e) {
       console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
     }
