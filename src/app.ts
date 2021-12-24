@@ -8,6 +8,7 @@ import {
 import { sleep } from "https://deno.land/x/sleep/mod.ts";
 import { join } from "https://deno.land/std@0.119.0/path/mod.ts";
 import { ensureDirSync } from "https://deno.land/std@0.119.0/fs/mod.ts";
+import { AirtableRecord } from "./airtable.ts";
 
 async function getAirtableData(
   baseId: string,
