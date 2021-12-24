@@ -9,6 +9,7 @@ import { sleep } from "https://deno.land/x/sleep/mod.ts";
 import { join } from "https://deno.land/std@0.119.0/path/mod.ts";
 import { ensureDirSync } from "https://deno.land/std@0.119.0/fs/mod.ts";
 import { AirtableRecord } from "./airtable.ts";
+import { reshape } from "./transform.ts";
 
 async function getAirtableData(
   baseId: string,
@@ -59,6 +60,13 @@ async function getAirtableData(
     } else {
       console.warn(`Data already exists for ${table}. Overwriting.…`);
       airtableData.set(table, res);
+    }
+
+    try {
+      reshape(airtableData);
+    } catch (e) {
+      console.error(red(e.message));
+      Deno.exit(1);
     }
 
     // Write the raw Airtable data to file before we finish

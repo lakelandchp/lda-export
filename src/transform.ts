@@ -1,3 +1,4 @@
+import { yellow } from "https://deno.land/std@0.119.0/fmt/colors.ts";
 import { AirtableRecord } from "./airtable.ts";
 
 type Attachment = {
@@ -39,4 +40,15 @@ type WebItem = {
   projects?: Record<ProjectsAllowedKeys, BookInfo | TourInfo | VideoInfo>;
 };
 
-function reshape(records: Map<string, AirtableRecord[]>): WebItem[] {}
+// function reshape(recordMap: Map<string, AirtableRecord[]>): WebItem[] {
+export function reshape(recordMap: Map<string, AirtableRecord[]>): void {
+  if (!recordMap.get("Items")) {
+    throw new Error(
+      `Items table is required. Please re-run with ${
+        yellow('"Items"')
+      } in table list.`,
+    );
+  } else {
+    // const itemData = recordMap.get("Items");
+  }
+}
