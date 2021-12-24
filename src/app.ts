@@ -116,10 +116,12 @@ async function* allRecords(
 const base = Deno.env.get("AIRTABLE_BASE_ID");
 const key = Deno.env.get("AIRTABLE_API_KEY");
 
-const tables = ["Items", "Item_Admin_Info"];
+const webTables = ["Items", "Lakeland_Book"];
+// TODO: Add more tables
+// const allTables = [];
 
 if (base && key) {
-  getAirtableData(base, tables, key, 60, "curl/7.77.0");
+  getAirtableData(base, webTables, key, 60, "curl/7.77.0");
 } else {
   console.error("Error: AIRTABLE_BASE_ID and AIRTABLE_API_KEY must be set");
 }
