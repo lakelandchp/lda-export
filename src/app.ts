@@ -6,8 +6,8 @@ import {
   yellow,
 } from "https://deno.land/std@0.119.0/fmt/colors.ts";
 import { sleep } from "https://deno.land/x/sleep/mod.ts";
-
-type AirtableRecord = Record<string, unknown>;
+import { join } from "https://deno.land/std@0.119.0/path/mod.ts";
+import { ensureDirSync } from "https://deno.land/std@0.119.0/fs/mod.ts";
 
 async function getAirtableData(
   baseId: string,
@@ -50,8 +50,10 @@ async function getAirtableData(
       `🗄✨ ${italic(brightGreen(res.length.toString()))} records retrieved.`,
     );
 
-    // Write the data to a file
-    const fileName = `${outputDir}/${table}.json`;
+    // Write the raw Airtable data to file
+    const rawPath = join(outputDir, "raw");
+    ensureDirSync(rawPath);
+    const fileName = `${rawPath}/${table}.json`;
     try {
       Deno.writeTextFileSync(fileName, JSON.stringify(res));
     } catch (e) {
