@@ -194,6 +194,18 @@ function processRecord(rec: AirtableRecord): WebItem {
   // The record id is at the top level of the original record not in "fields"
   const airtableId = rename("id", rec.id);
 
+  if (id && typeof id === "string") {
+    stubRecord.id = id;
+  }
+
+  if (type && typeof type === "string") {
+    stubRecord.type = type;
+  }
+
+  if (suppress_display && typeof suppress_display === "boolean") {
+    stubRecord.suppress_display = suppress_display;
+  }
+
   if (chapter && pageNumber) {
     if (typeof chapter === "string" && typeof pageNumber === "number") {
       stubRecord.projects = {
@@ -208,6 +220,13 @@ function processRecord(rec: AirtableRecord): WebItem {
   if (parent && typeof parent === "string") {
     stubRecord.parent = parent;
   }
+
+  if (order && typeof order === "number") {
+    stubRecord.order = order;
+  } else {
+    stubRecord.order = 1;
+  }
+
   if (asset) {
     stubRecord.asset = asset;
   }
@@ -215,10 +234,6 @@ function processRecord(rec: AirtableRecord): WebItem {
   const newWebItem = {
     ...stubRecord,
     ...airtableId,
-    ...id,
-    ...type,
-    ...order,
-    ...suppress_display,
   };
 
   return newWebItem as WebItem;
