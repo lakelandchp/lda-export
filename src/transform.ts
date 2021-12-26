@@ -40,6 +40,7 @@ type WebItem = {
   description: string;
   order: number;
   suppress_display: boolean;
+  parent?: string;
   type?: string[];
   asset?: Attachment;
   projects?: Projects;
@@ -139,7 +140,7 @@ function processRecord(rec: AirtableRecord): WebItem {
   const recordData: _FieldsObject = rec.fields;
 
   const stubRecord: Partial<WebItem> = {};
-  let id, type, order, suppress_display, asset, chapter, pageNumber;
+  let id, type, parent, order, suppress_display, asset, chapter, pageNumber;
 
   // If properties are present, process them
   for (const [key, value] of Object.entries(recordData)) {
@@ -169,6 +170,9 @@ function processRecord(rec: AirtableRecord): WebItem {
       switch (key) {
         case "item_type":
           type = rename(key, value);
+          break;
+        case "part_of_object":
+          parent = pluck(key, value as string[]);
           break;
         case "has_remove_reason":
           suppress_display = setBoolValue(key, value);
@@ -201,6 +205,9 @@ function processRecord(rec: AirtableRecord): WebItem {
     }
   }
 
+  if (parent && typeof parent === "string") {
+    stubRecord.parent = parent;
+  }
   if (asset) {
     stubRecord.asset = asset;
   }
