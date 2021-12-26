@@ -62,13 +62,6 @@ async function getAirtableData(
       airtableData.set(table, res);
     }
 
-    try {
-      reshape(airtableData);
-    } catch (e) {
-      console.error(red(e.message));
-      Deno.exit(1);
-    }
-
     // Write the raw Airtable data to file before we finish
     const rawPath = join(outputDir, "raw");
     ensureDirSync(rawPath);
@@ -78,6 +71,24 @@ async function getAirtableData(
     } catch (e) {
       console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
     }
+  }
+
+  let itemAPIResponse;
+  try {
+    itemAPIResponse = reshape(airtableData);
+  } catch (e) {
+    console.error(red(e.message));
+    Deno.exit(1);
+  }
+
+  //  Write the transformed data to file
+  const transformedPath = join(outputDir, "api");
+  ensureDirSync(transformedPath);
+  const fileName = `${transformedPath}/LDA.json`;
+  try {
+    Deno.writeTextFileSync(fileName, JSON.stringify(itemAPIResponse));
+  } catch (e) {
+    console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
   }
 }
 
@@ -135,7 +146,7 @@ async function* allRecords(
 const base = Deno.env.get("AIRTABLE_BASE_ID");
 const key = Deno.env.get("AIRTABLE_API_KEY");
 
-const webTables = ["Items", "Lakeland_Book"];
+const webTables = ["Items"];
 // TODO: Add more tables
 // const allTables = [];
 
