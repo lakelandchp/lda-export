@@ -7,7 +7,7 @@
       "args": [
         "--allow-env=AIRTABLE_BASE_ID,AIRTABLE_API_KEY",
         "--allow-net=api.airtable.com",
-        "--allow-read=./public/raw",
+        "--allow-read=./public/raw,./public/api",
         "--allow-write=./public",
         "./src/app.ts"
       ],
