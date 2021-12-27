@@ -7,8 +7,8 @@
       "args": [
         "--allow-env=AIRTABLE_BASE_ID,AIRTABLE_API_KEY",
         "--allow-net=api.airtable.com",
-        "--allow-read=./dist/raw,./dist/api",
-        "--allow-write=./dist",
+        "--allow-read=.",
+        "--allow-write=.",
         "./src/app.ts"
       ],
       "problemMatcher": [
@@ -22,10 +22,11 @@
       "args": [
         "--allow-env=AIRTABLE_BASE_ID,AIRTABLE_API_KEY",
         "--allow-net=api.airtable.com",
-        "--allow-read=./dist/raw,./dist/api",
-        "--allow-write=./dist",
+        "--allow-read=.",
+        "--allow-write=.",
         "--output=persist",
-        "./src/app.ts"
+        "./src/app.ts",
+        "--lite"
       ],
       "problemMatcher": [
         "$deno"
