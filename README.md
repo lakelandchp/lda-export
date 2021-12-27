@@ -22,7 +22,7 @@ deno run \
 --allow-net=api.airtable.com \
 --allow-read=. \
 --allow-write=. \
-./src/app.ts
+./src/mod.ts
 ```
 
 Additional flags can be passed in after `app.ts`:
