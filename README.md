@@ -30,4 +30,4 @@ Additional flags can be passed in after `app.ts`:
 - To configure the directory for data export: `--outputDir=DIRNAME`
 - To export data from all tables: `--backup`
 
-When compiled, this project emits a binary named `persist`
+When compiled, this project emits a binary named `lda-export`

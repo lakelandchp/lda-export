@@ -9,7 +9,7 @@
         "--allow-net=api.airtable.com",
         "--allow-read=.",
         "--allow-write=.",
-        "./src/app.ts"
+        "./src/mod.ts"
       ],
       "problemMatcher": [
         "$deno"
@@ -24,8 +24,8 @@
         "--allow-net=api.airtable.com",
         "--allow-read=.",
         "--allow-write=.",
-        "--output=persist",
-        "./src/app.ts"
+        "--output=lda-export",
+        "./src/mod.ts"
       ],
       "problemMatcher": [
         "$deno"
