@@ -25,8 +25,7 @@
         "--allow-read=.",
         "--allow-write=.",
         "--output=persist",
-        "./src/app.ts",
-        "--lite"
+        "./src/app.ts"
       ],
       "problemMatcher": [
         "$deno"
