@@ -5,6 +5,7 @@ import {
   red,
   yellow,
 } from "https://deno.land/std@0.119.0/fmt/colors.ts";
+import { parse } from "https://deno.land/std@0.119.0/flags/mod.ts";
 import { sleep } from "https://deno.land/x/sleep/mod.ts";
 import { join } from "https://deno.land/std@0.119.0/path/mod.ts";
 import { ensureDirSync } from "https://deno.land/std@0.119.0/fs/mod.ts";
@@ -15,10 +16,10 @@ async function getAirtableData(
   baseId: string,
   tables: string[],
   apiKey: string,
-  httpReadTimeout?: number,
+  outputDir: string,
+  httpReadTimeout: number,
   userAgent?: string | null,
   delay = 0.2,
-  outputDir = "./public",
 ): Promise<void> {
   console.log(`Records will be written to ${cyan(outputDir)}`);
   console.log(
@@ -149,6 +150,14 @@ const key = Deno.env.get("AIRTABLE_API_KEY");
 const webTables = ["Items"];
 // TODO: Add more tables
 // const allTables = [];
+const flags = parse(Deno.args);
+
+// Set flags if they are not set
+const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
+
+// Default to curl user agent to look basic
+const userAgent: string = flags.userAgent || "curl/7.77.0";
+const outputDir: string = flags.outputDir || ".";
 
 if (base && key) {
   getAirtableData(base, webTables, key, 60, "curl/7.77.0");
