@@ -64,7 +64,7 @@ async function getAirtableData(
     }
 
     // Write the raw Airtable data to file before we finish
-    const rawPath = join(outputDir, "raw");
+    const rawPath = join(outputDir, "data", "raw");
     ensureDirSync(rawPath);
     const fileName = `${rawPath}/${table}.json`;
     try {
@@ -83,7 +83,7 @@ async function getAirtableData(
   }
 
   //  Write the transformed data to file
-  const transformedPath = join(outputDir, "api");
+  const transformedPath = join(outputDir, "data", "api");
   ensureDirSync(transformedPath);
   const fileName = `${transformedPath}/LDA.json`;
   try {
