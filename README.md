@@ -10,18 +10,24 @@ You will need the following information:
 - Your Airtable base ID - this is a string starting with `app...`
 - Your Airtable API key - this is a string starting with `key...`
 
-Export data by running
+This repository includes a `tasks.json` file so that it can be run from within
+VSCode using the Command Palette (Command + Shift + P). Select `Tasks: Run Task`
+then `deno: run` or `deno: compile`.
+
+If you want to run directly from the command line, you would invoke:
 
 ```
 deno run \ 
 --allow-env=AIRTABLE_BASE_ID,AIRTABLE_API_KEY \
 --allow-net=api.airtable.com \
---allow-write=./public \
+--allow-read=. \
+--allow-write=. \
 ./src/app.ts
 ```
 
-Destination for data export can be configured by passing a path at runtime.
+Additional flags can be passed in after `app.ts`:
 
-The script is also configured so that it can be run from within VSCode using the
-Command Palette (Command + Shift + P). Select `Tasks: Run Task` then
-`deno: run`.
+- To configure the directory for data export: `--outputDir=DIRNAME`
+- To export data from all tables: `--backup`
+
+When compiled, this project emits a binary named `persist`
