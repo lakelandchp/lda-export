@@ -147,9 +147,6 @@ async function* allRecords(
 const base = Deno.env.get("AIRTABLE_BASE_ID");
 const key = Deno.env.get("AIRTABLE_API_KEY");
 
-const webTables = ["Items"];
-// TODO: Add more tables
-// const allTables = [];
 const flags = parse(Deno.args);
 
 // Set flags if they are not set
@@ -159,8 +156,33 @@ const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
 const userAgent: string = flags.userAgent || "curl/7.77.0";
 const outputDir: string = flags.outputDir || ".";
 
+const ONLYWEB = ["Items"];
+const ALLTABLES = [
+  "Items",
+  "Composite_Objects",
+  "Entities",
+  "Locations",
+  "Subjects",
+  "Relationships",
+  "Item_Admin_Info",
+  "Person_Admin_Info",
+  "Lakeland_Book",
+  "Lakeland_Tour_Sites",
+];
+
 if (base && key) {
-  getAirtableData(base, webTables, key, 60, "curl/7.77.0");
+  if (flags.backup) {
+    getAirtableData(
+      base,
+      ALLTABLES,
+      key,
+      outputDir,
+      httpReadTimeout,
+      userAgent,
+    );
+  } else {
+    getAirtableData(base, ONLYWEB, key, outputDir, httpReadTimeout, userAgent);
+  }
 } else {
   console.error(
     red("Error: AIRTABLE_BASE_ID and AIRTABLE_API_KEY must be set"),
