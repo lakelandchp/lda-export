@@ -9,7 +9,8 @@
         "--allow-net=api.airtable.com",
         "--allow-read=.",
         "--allow-write=.",
-        "./src/mod.ts"
+        "./src/mod.ts",
+        "--outputDir=./dist"
       ],
       "problemMatcher": [
         "$deno"
