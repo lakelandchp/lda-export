@@ -46,72 +46,6 @@ type WebItem = {
   projects?: Projects;
 };
 
-// type Subset<T, U extends keyof T> = { [K in U]: T[K] };
-
-// function subset<T, U extends keyof T>(obj: T, keys: U[]): Subset<T, U> {
-//   const subsetted = Object.fromEntries(
-//     Object.entries(obj).filter(([key]) => keys.includes(key as U)),
-//   );
-
-//   // TODO: Make typing more correct
-//   return subsetted as Subset<T, U>;
-// }
-
-type _FieldValues =
-  | string
-  | number
-  | boolean
-  | string[]
-  | number[]
-  | Record<string, unknown>;
-
-type _FieldsObject = Record<
-  string,
-  _FieldValues
->;
-
-function rename(key: string, value: _FieldValues): Partial<WebItem> {
-  switch (key) {
-    case "id":
-      return { airtable_record_id: value as string };
-    case "item_id":
-      return { id: value as string };
-    case "item_type":
-      return { type: value as string[] };
-    case "object_order":
-      return { order: value as number };
-    default:
-      throw "Unknown field to rename";
-  }
-}
-
-// Some properties which should always be single values are
-// stored as arrays because Airtable. Convert them to single values.
-function pluck(
-  key: string,
-  value: unknown[],
-): unknown | void {
-  if (value.length > 1) {
-    throw `Too many values in ${key}`;
-  }
-  return value[0];
-}
-
-function setBoolValue(key: string, value: _FieldValues): Partial<WebItem> {
-  if (value instanceof Array) {
-    if (value.length > 0) {
-      return { "suppress_display": true };
-    } else {
-      // This will never be executed because the key
-      // is not present if the value is empty but this
-      // satisfies the compiler
-      return { "suppress_display": false };
-    }
-  } else {
-    throw `${key} is not an object. Did the type of ${key} change in Airtable?`;
-  }
-}
-
 function handleAttachment(attachmentObj: unknown): Attachment {
   const attachmentSrc = attachmentObj as AirtableAttachment;
   const { id, filename, size, width, height, url, thumbnails, type } =
@@ -136,122 +70,88 @@ function handleAttachment(attachmentObj: unknown): Attachment {
   return attachment;
 }
 
-function processRecord(rec: AirtableRecord): WebItem {
-  const recordData: _FieldsObject = rec.fields;
-
-  const stubRecord: Partial<WebItem> = {};
-  let id, type, parent, order, suppress_display, asset, chapter, pageNumber;
-
-  // If properties are present, process them
-  for (const [key, value] of Object.entries(recordData)) {
-    if (typeof value === "string") {
-      switch (key) {
-        case "title":
-          stubRecord.title = value;
-          break;
-        case "description":
-          stubRecord.description = value;
-          break;
-        case "item_id":
-          id = rename(key, value);
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (typeof value === "number") {
-      if (key === "object_order") {
-        order = rename(key, value);
-      }
-    }
-
-    if (Array.isArray(value)) {
-      switch (key) {
-        case "item_type":
-          type = rename(key, value);
-          break;
-        case "part_of_object":
-          parent = pluck(key, value as string[]);
-          break;
-        case "has_remove_reason":
-          suppress_display = setBoolValue(key, value);
-          break;
-        case "lakeland_book_chapter (from book_info)":
-          chapter = pluck(key, value as string[]);
-          break;
-        case "lakeland_book_page (from book_info)":
-          pageNumber = pluck(key, value as number[]);
-          break;
-        case "reference_attachment":
-          asset = handleAttachment(pluck(key, value));
-          break;
-        default:
-          break;
-      }
-    }
+// Some properties which should always be single values are
+// stored as arrays because Airtable. Convert them to single values.
+function pluck(valueList: unknown[]): unknown | void {
+  if (valueList.length > 1) {
+    throw `Too many values in list.`;
   }
-  // The record id is at the top level of the original record not in "fields"
-  const airtableId = rename("id", rec.id);
+  return valueList[0];
+}
 
-  if (id && typeof id.id === "string") {
-    stubRecord.id = id.id;
+function processRecord(
+  rec: Readonly<AirtableRecord>,
+): { [key: string]: unknown } | void {
+  const airtableRecordId: string = rec.id;
+  let _airtableRecordCreatedTime: null; // Ignoring this key on purpose
+  const fields: Record<string, unknown> = rec.fields;
+
+  // fields object could have all sorts of keys depending
+  // on what table it was created from so we need to affirmatively
+  // grab the keys we need.
+  const {
+    item_id,
+    title,
+    description,
+    part_of_object,
+    object_order,
+    item_type,
+    has_remove_reason,
+    reference_attachment,
+  } = fields;
+
+  let chapter, page;
+  if (fields["lakeland_book_page (from book_info)"]) {
+    chapter = pluck(
+      fields["lakeland_book_page (from book_info)"] as string[],
+    );
   }
 
-  if (type && typeof type.type === "string") {
-    stubRecord.type = type.type;
+  if (fields["lakeland_book_page (from book_info)"]) {
+    page = pluck(
+      fields["lakeland_book_page (from book_info)"] as number[],
+    );
   }
 
-  if (
-    suppress_display && typeof suppress_display.suppress_display === "boolean"
-  ) {
-    stubRecord.suppress_display = suppress_display.suppress_display;
+  let book;
+  if (chapter && page) {
+    book = {
+      chapter: chapter,
+      pageNumber: page,
+    };
   }
 
-  if (chapter && pageNumber) {
-    if (typeof chapter === "string" && typeof pageNumber === "number") {
-      stubRecord.projects = {
-        book: {
-          chapter,
-          page: pageNumber,
-        },
-      };
-    }
+  let asset;
+  if (reference_attachment && Array.isArray(reference_attachment)) {
+    asset = handleAttachment(pluck(reference_attachment) as Attachment);
   }
 
-  if (parent && typeof parent === "string") {
-    stubRecord.parent = parent;
-  }
-
-  if (order && typeof order === "number") {
-    stubRecord.order = order;
-  } else {
-    stubRecord.order = 1;
-  }
-
-  if (asset) {
-    stubRecord.asset = asset;
-  }
-
-  const newWebItem = {
-    ...stubRecord,
-    ...airtableId,
+  const stubRecord = {
+    id: item_id,
+    airtable_record_id: airtableRecordId,
+    title,
+    description,
+    parent: part_of_object ? pluck(part_of_object as string[]) : undefined,
+    order: object_order,
+    type: item_type,
+    suppress_display: has_remove_reason ? true : false,
+    project: book ? { book } : undefined,
+    asset: asset ? asset : undefined,
   };
 
-  return newWebItem as WebItem;
+  return Object.fromEntries(Object.entries(stubRecord).filter(([_, v]) => v));
 }
 
 export function reshape(recordMap: Map<string, AirtableRecord[]>): WebItem[] {
-  // export function reshape(recordMap: Map<string, AirtableRecord[]>): void {
-  const itemData = recordMap.get("Items");
-  if (!itemData) {
+  const itemsData = recordMap.get("Items");
+  if (!itemsData) {
     throw new Error(
       `Items table is required. Please re-run with ${
         yellow('"Items"')
       } in table list.`,
     );
   } else {
-    const webRecords = itemData.map(processRecord);
-    return webRecords;
+    const webItems = itemsData.map(processRecord);
+    return webItems as WebItem[];
   }
 }
