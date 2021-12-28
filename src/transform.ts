@@ -194,16 +194,18 @@ function processRecord(rec: AirtableRecord): WebItem {
   // The record id is at the top level of the original record not in "fields"
   const airtableId = rename("id", rec.id);
 
-  if (id && typeof id === "string") {
-    stubRecord.id = id;
+  if (id && typeof id.id === "string") {
+    stubRecord.id = id.id;
   }
 
-  if (type && typeof type === "string") {
-    stubRecord.type = type;
+  if (type && typeof type.type === "string") {
+    stubRecord.type = type.type;
   }
 
-  if (suppress_display && typeof suppress_display === "boolean") {
-    stubRecord.suppress_display = suppress_display;
+  if (
+    suppress_display && typeof suppress_display.suppress_display === "boolean"
+  ) {
+    stubRecord.suppress_display = suppress_display.suppress_display;
   }
 
   if (chapter && pageNumber) {
