@@ -21,7 +21,6 @@ async function getAirtableData(
   userAgent?: string | null,
   delay = 0.2,
 ): Promise<void> {
-  console.log(`Records will be written to ${cyan(outputDir)}`);
   console.log(
     `Connecting to ${cyan(`https://api.airtable.com/v0/${baseId}`)} …`,
   );
@@ -85,6 +84,7 @@ async function getAirtableData(
   //  Write the transformed data to file
   const transformedPath = join(outputDir, "data", "api");
   ensureDirSync(transformedPath);
+  console.log(`Records will be written to ${cyan(transformedPath)}`);
   const fileName = `${transformedPath}/LDA.json`;
   try {
     Deno.writeTextFileSync(fileName, JSON.stringify(itemAPIResponse));
