@@ -156,7 +156,7 @@ const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
 const userAgent: string = flags.userAgent || "curl/7.77.0";
 const outputDir: string = flags.outputDir || "./dist";
 
-const ONLYWEB = ["Items"];
+const ONLYWEB = ["Composite_Objects", "Items", "Subjects", "Entities"];
 const ALLTABLES = [
   "Items",
   "Composite_Objects",

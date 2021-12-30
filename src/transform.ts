@@ -44,6 +44,8 @@ interface OptionalItemFields {
   type?: string[];
   asset?: Attachment;
   projects?: Projects;
+  linked_subjects?: string[];
+  linked_entities?: string[];
 }
 
 // Can't really do anything useful without these keys
@@ -74,6 +76,65 @@ function handleAttachment(attachmentObj: unknown): Attachment {
     versions,
   };
   return attachment;
+}
+
+/** Creates new objects for items that multiple parts */
+function handleMultiPartItems(
+  mItems: WebItem[],
+  otherTableRecords: AirtableRecord[] | undefined,
+): WebItem[] {
+  if (!otherTableRecords || otherTableRecords.length === 0) {
+    throw `No records found in other table.`;
+  }
+
+  const parentItemMap = new Map<string, WebItem[]>();
+  mItems.forEach((it) => {
+    if (it.parent) {
+      if (!parentItemMap.has(it.parent)) {
+        parentItemMap.set(it.parent, [it]);
+      } else {
+        parentItemMap.get(it.parent)!.push(it); // ! is safe because we just checked.
+      }
+    }
+  });
+
+  const newItems = [];
+
+  for (const [parentId, childItems] of parentItemMap) {
+    const parentRecord = otherTableRecords.find((rec) => rec.id === parentId);
+    const parentData = parentRecord ? parentRecord.fields : undefined;
+    if (parentData) {
+      const allSubjects: string[] = childItems.map((it) => {
+        return it.linked_subjects ? it.linked_subjects : [];
+      })
+        .flat();
+      const allEntities: string[] = childItems.map((it) => {
+        return it.linked_entities ? it.linked_entities : [];
+      })
+        .flat();
+      const subjects = [...new Set(allSubjects)];
+      const entities = [...new Set(allEntities)];
+      const cItemId = parentData.object_id;
+      const sortedChildItems = childItems.sort((a, b) => a.order - b.order);
+      newItems.push({
+        id: cItemId,
+        airtable_record_id: parentId,
+        title: parentData.object_title,
+        description: parentData.object_description,
+        linked_subjects: subjects,
+        linked_entities: entities,
+        has_parts: sortedChildItems,
+        order: sortedChildItems[0].order,
+        suppress_display: sortedChildItems.find((it) =>
+            it.suppress_display === true
+          )
+          ? true
+          : false,
+      });
+    }
+  }
+  // throw "Not yet implemented";
+  return newItems;
 }
 
 // Some properties which should always be single values are
@@ -149,15 +210,46 @@ function processRecord(
     linked_entities,
   };
 
-  return Object.fromEntries(Object.entries(stubRecord).filter(([_, v]) => v));
+  if (stubRecord) {
+    return Object.fromEntries(Object.entries(stubRecord).filter(([_, v]) => v));
+  } else {
+    console.warn(`No web item could be created from airtable record ${rec.id}`);
+  }
 }
 
 export function reshape(recordMap: Map<string, AirtableRecord[]>): WebItem[] {
   const itemsData = recordMap.get("Items");
+  const compositesData = recordMap.get("Composite_Objects");
+  const subjectsData = recordMap.get("Subjects");
+  const entitiesData = recordMap.get("Entities");
+
   if (!itemsData) {
     throw new Error("No Items data found.");
   } else {
-    const webItems = (itemsData.map(processRecord) as unknown) as WebItem[];
-    return webItems;
+    const partialWebItems =
+      (itemsData.map(processRecord) as unknown) as WebItem[];
+
+    // Some items have multiple parts, so we need to combine them
+    const singletons = partialWebItems.filter((it) => !it.parent);
+    let composites: WebItem[] = [];
+    const multiPartItems = partialWebItems.filter((pItem) => pItem.parent);
+    if (multiPartItems && multiPartItems.length > 0) {
+      composites = handleMultiPartItems(multiPartItems, compositesData);
+    }
+
+    // const itemsWithSubjects = partialWebItems.filter((pItem) =>
+    //   pItem.linked_subjects
+    // );
+    // const itemsWithEntities = partialWebItems.filter((pItem) =>
+    //   pItem.linked_entities
+    // );
+
+    const finalData = [
+      ...singletons,
+      ...composites,
+    ];
+
+    // throw "Not yet implemented";
+    return finalData;
   }
 }
