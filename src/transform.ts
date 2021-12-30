@@ -100,11 +100,13 @@ function processRecord(
     item_id,
     title,
     description,
-    part_of_object,
-    object_order,
     item_type,
     has_remove_reason,
     reference_attachment,
+    part_of_object,
+    object_order,
+    linked_subjects,
+    linked_entities,
   } = fields;
 
   let chapter, page;
@@ -138,12 +140,14 @@ function processRecord(
     airtable_record_id: airtableRecordId,
     title,
     description,
-    parent: part_of_object ? pluck(part_of_object as string[]) : undefined,
-    order: object_order,
     type: item_type,
     suppress_display: has_remove_reason ? true : false,
     project: book ? { book } : undefined,
     asset: asset ? asset : undefined,
+    parent: part_of_object ? pluck(part_of_object as string[]) : undefined,
+    order: object_order ? object_order : 1,
+    linked_subjects,
+    linked_entities,
   };
 
   return Object.fromEntries(Object.entries(stubRecord).filter(([_, v]) => v));
