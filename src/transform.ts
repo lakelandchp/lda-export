@@ -33,18 +33,25 @@ type Projects = {
   video?: VideoInfo;
 };
 
-type WebItem = {
+interface Item {
   id: string;
   airtable_record_id: string;
-  title: string;
-  description: string;
   order: number;
   suppress_display: boolean;
+}
+
+interface OptionalItemFields {
   parent?: string;
   type?: string[];
   asset?: Attachment;
   projects?: Projects;
-};
+}
+
+// Can't really do anything useful without these keys
+interface WebItem extends Item, OptionalItemFields {
+  title: string;
+  description: string;
+}
 
 function handleAttachment(attachmentObj: unknown): Attachment {
   const attachmentSrc = attachmentObj as AirtableAttachment;
@@ -151,7 +158,7 @@ export function reshape(recordMap: Map<string, AirtableRecord[]>): WebItem[] {
       } in table list.`,
     );
   } else {
-    const webItems = itemsData.map(processRecord);
-    return webItems as WebItem[];
+    const webItems = (itemsData.map(processRecord) as unknown) as WebItem[];
+    return webItems;
   }
 }
