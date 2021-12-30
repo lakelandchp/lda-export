@@ -78,7 +78,21 @@ function handleAttachment(attachmentObj: unknown): Attachment {
   return attachment;
 }
 
-/** Creates new objects for items that multiple parts */
+function convertIdToName(
+  idString: string,
+  otherTableRecords: AirtableRecord[] | undefined,
+): string | undefined {
+  if (!otherTableRecords || otherTableRecords.length === 0) {
+    throw `No records found in other table.`;
+  }
+  const otherTableRecord = otherTableRecords.find((rec) => rec.id === idString);
+  const otherTableData = otherTableRecord ? otherTableRecord.fields : undefined;
+  if (otherTableData) {
+    const { name } = otherTableData;
+    return name;
+  }
+}
+
 function handleMultiPartItems(
   mItems: WebItem[],
   otherTableRecords: AirtableRecord[] | undefined,
@@ -237,19 +251,39 @@ export function reshape(recordMap: Map<string, AirtableRecord[]>): WebItem[] {
       composites = handleMultiPartItems(multiPartItems, compositesData);
     }
 
-    // const itemsWithSubjects = partialWebItems.filter((pItem) =>
-    //   pItem.linked_subjects
-    // );
-    // const itemsWithEntities = partialWebItems.filter((pItem) =>
-    //   pItem.linked_entities
-    // );
-
-    const finalData = [
+    const itemsSingleAndMultiple = [
       ...singletons,
       ...composites,
     ];
 
-    // throw "Not yet implemented";
-    return finalData;
+    // Now we need to convert the subjects from ids to strings
+    itemsSingleAndMultiple.map((it) => {
+      if (it.linked_subjects && it.linked_subjects.length > 0) {
+        const mappedSubjects = it.linked_subjects.map((subjectId) => {
+          return convertIdToName(subjectId, subjectsData);
+        }).filter(Boolean);
+        if (mappedSubjects.length > 0) {
+          it.linked_subjects = mappedSubjects as string[];
+        } else {
+          delete it.linked_subjects;
+        }
+      }
+    });
+
+    // … and the entities
+    itemsSingleAndMultiple.map((it) => {
+      if (it.linked_entities && it.linked_entities.length > 0) {
+        const mappedEntities = it.linked_entities.map((entityId) => {
+          return convertIdToName(entityId, entitiesData);
+        }).filter(Boolean);
+        if (mappedEntities.length > 0) {
+          it.linked_entities = mappedEntities as string[];
+        } else {
+          delete it.linked_entities;
+        }
+      }
+    });
+
+    return itemsSingleAndMultiple;
   }
 }
