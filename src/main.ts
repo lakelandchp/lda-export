@@ -154,7 +154,7 @@ const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
 
 // Default to curl user agent to look basic
 const userAgent: string = flags.userAgent || "curl/7.77.0";
-const outputDir: string = flags.outputDir || ".";
+const outputDir: string = flags.outputDir || "./dist";
 
 const ONLYWEB = ["Items"];
 const ALLTABLES = [
