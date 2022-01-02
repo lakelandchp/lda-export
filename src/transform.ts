@@ -184,9 +184,9 @@ function processRecord(
   } = fields;
 
   let chapter, page;
-  if (fields["lakeland_book_page (from book_info)"]) {
+  if (fields["lakeland_book_chapter (from book_info)"]) {
     chapter = pluck(
-      fields["lakeland_book_page (from book_info)"] as string[],
+      fields["lakeland_book_chapter (from book_info)"] as string[],
     );
   }
 
@@ -216,7 +216,7 @@ function processRecord(
     description,
     type: item_type,
     suppress_display: has_remove_reason ? true : false,
-    project: book ? { book } : undefined,
+    projects: book ? { book } : undefined,
     asset: asset ? asset : undefined,
     parent: part_of_object ? pluck(part_of_object as string[]) : undefined,
     order: object_order ? object_order : 1,
@@ -225,6 +225,7 @@ function processRecord(
   };
 
   if (stubRecord) {
+    // filter out any keys that have values that are undefined
     return Object.fromEntries(Object.entries(stubRecord).filter(([_, v]) => v));
   } else {
     console.warn(`No web item could be created from airtable record ${rec.id}`);
