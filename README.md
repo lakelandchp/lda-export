@@ -22,10 +22,10 @@ deno run \
 --allow-net=api.airtable.com \
 --allow-read=. \
 --allow-write=. \
-./src/mod.ts
+./src/main.ts
 ```
 
-Additional flags can be passed in after `app.ts`:
+Additional flags can be passed in after `main.ts`:
 
 - To configure the directory for data export: `--outputDir=DIRNAME`
 - To export data from all tables: `--backup`
