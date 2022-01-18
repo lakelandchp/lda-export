@@ -77,7 +77,7 @@ async function getAirtableData(
   try {
     itemAPIResponse = reshape(airtableData);
   } catch (e) {
-    console.error(red(e.message));
+    console.error(e);
     Deno.exit(1);
   }
 
