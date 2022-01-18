@@ -16,11 +16,10 @@ async function getAirtableData(
   baseId: string,
   tables: string[],
   apiKey: string,
-  outputDir: string,
   httpReadTimeout: number,
   userAgent?: string | null,
   delay = 0.2,
-): Promise<void> {
+): Promise<Map<string, AirtableRecord[]>> {
   console.log(
     `Connecting to ${cyan(`https://api.airtable.com/v0/${baseId}`)} …`,
   );
@@ -61,36 +60,9 @@ async function getAirtableData(
       console.warn(`Data already exists for ${table}. Overwriting.…`);
       airtableData.set(table, res);
     }
-
-    // Write the raw Airtable data to file before we finish
-    const rawPath = join(outputDir, "data", "raw");
-    ensureDirSync(rawPath);
-    const fileName = `${rawPath}/${table}.json`;
-    try {
-      Deno.writeTextFileSync(fileName, JSON.stringify(airtableData.get(table)));
-    } catch (e) {
-      console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
-    }
   }
 
-  let itemAPIResponse;
-  try {
-    itemAPIResponse = reshape(airtableData);
-  } catch (e) {
-    console.error(e);
-    Deno.exit(1);
-  }
-
-  //  Write the transformed data to file
-  const transformedPath = join(outputDir, "data", "api");
-  ensureDirSync(transformedPath);
-  console.log(`Records will be written to ${cyan(transformedPath)}`);
-  const fileName = `${transformedPath}/LDA.json`;
-  try {
-    Deno.writeTextFileSync(fileName, JSON.stringify(itemAPIResponse));
-  } catch (e) {
-    console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
-  }
+  return airtableData;
 }
 
 async function* allRecords(
@@ -144,6 +116,33 @@ async function* allRecords(
   clearTimeout(cId);
 }
 
+function write(
+  baseData: Map<string, AirtableRecord[]> | unknown[],
+  outputPath: string,
+): void {
+  ensureDirSync(outputPath);
+
+  if (baseData instanceof Map) {
+    for (const [tableName, records] of baseData) {
+      const fileName = `${outputPath}/${tableName}.json`;
+      try {
+        Deno.writeTextFileSync(fileName, JSON.stringify(records));
+        console.log(`Records written to ${cyan(fileName)}`);
+      } catch (e) {
+        console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
+      }
+    }
+  } else {
+    const fileName = `${outputPath}/LDA.json`;
+    try {
+      Deno.writeTextFileSync(fileName, JSON.stringify(baseData));
+      console.log(`Records written to ${cyan(fileName)}`);
+    } catch (e) {
+      console.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
+    }
+  }
+}
+
 const base = Deno.env.get("AIRTABLE_BASE_ID");
 const key = Deno.env.get("AIRTABLE_API_KEY");
 
@@ -172,16 +171,29 @@ const ALLTABLES = [
 
 if (base && key) {
   if (flags.backup) {
-    getAirtableData(
+    const allBaseData = await getAirtableData(
       base,
       ALLTABLES,
       key,
-      outputDir,
       httpReadTimeout,
       userAgent,
     );
+    write(allBaseData, join(outputDir, "data", "raw"));
   } else {
-    getAirtableData(base, ONLYWEB, key, outputDir, httpReadTimeout, userAgent);
+    const websiteData = await getAirtableData(
+      base,
+      ONLYWEB,
+      key,
+      httpReadTimeout,
+      userAgent,
+    );
+    try {
+      const transformedData = reshape(websiteData);
+      write(transformedData, join(outputDir, "data", "api"));
+    } catch (e) {
+      console.error(e);
+      Deno.exit(1);
+    }
   }
 } else {
   console.error(
