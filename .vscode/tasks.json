@@ -24,13 +24,28 @@
         "--allow-net=api.airtable.com",
         "--allow-read=.",
         "--allow-write=.",
-        "--output=lda-export",
+        "--output=./dist/lda-export-${input:compileTarget}",
+        "--target=${input:compileTarget}",
         "./src/main.ts"
       ],
       "problemMatcher": [
         "$deno"
       ],
       "label": "deno: compile"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "pickString",
+      "id": "compileTarget",
+      "description": "What target architecture should the compile be for?",
+      "options": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu",
+      ],
+      "default": "aarch64-apple-darwin",
     }
   ]
 }
