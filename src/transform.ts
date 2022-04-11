@@ -155,7 +155,7 @@ function handleMultiPartItems(
 // stored as arrays because Airtable. Convert them to single values.
 function pluck(valueList: unknown[]): unknown | void {
   if (valueList.length > 1) {
-    throw `Too many values in list.`;
+    console.warn(`Too many values in list. ${JSON.stringify(valueList)}`);
   }
   return valueList[0];
 }
