@@ -1,16 +1,8 @@
-import {
-  brightGreen,
-  cyan,
-  ensureDirSync,
-  italic,
-  join,
-  parse,
-  red,
-  sleep,
-  yellow,
-} from "./deps.ts";
-import { AirtableRecord } from "./airtable.ts";
-import { reshape } from "./transform.ts";
+import { brightGreen, cyan, italic, red, yellow } from "std/fmt/colors";
+import { parse } from "std/flags";
+import { sleep } from "sleep";
+import { join } from "std/path";
+import { ensureDirSync } from "std/fs";
 
 async function getAirtableData(
   baseId: string,
