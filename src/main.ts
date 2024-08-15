@@ -11,12 +11,12 @@ async function getAirtableData(
   httpReadTimeout: number,
   userAgent?: string | null,
   delay = 0.2,
-): Promise<Map<string, AirtableRecord[]>> {
+): Promise<Map<string, Record<string, unknown>[]>> {
   console.log(
     `Connecting to ${cyan(`https://api.airtable.com/v0/${baseId}`)} …`,
   );
 
-  const airtableData = new Map<string, AirtableRecord[]>();
+  const airtableData = new Map<string, Record<string, unknown>[]>();
 
   // Main loop over all tables
   for (const table of tables) {
@@ -26,7 +26,7 @@ async function getAirtableData(
     // yielded so that's why we have a list of lists here.
     //
     // Below we use flat() to flatten the list of lists into a single list.
-    const records: Array<AirtableRecord[]> = [];
+    const records: Array<Record<string, unknown>[]> = [];
 
     const tableRecords = allRecords(
       baseId,
@@ -64,7 +64,7 @@ async function* allRecords(
   httpReadTimeout?: number,
   userAgent?: string | null,
   delay?: number,
-): AsyncGenerator<AirtableRecord[], void, void> {
+): AsyncGenerator<Record<string, unknown>[], void, void> {
   //   Prepare the request
   const _headers: Array<string[]> = [];
   if (userAgent) {
@@ -97,7 +97,9 @@ async function* allRecords(
     });
     const jsonData = await jsonResponse.json();
     offset = jsonData.offset;
-    yield new Promise<AirtableRecord[]>((resolve) => resolve(jsonData.records));
+    yield new Promise<Record<string, unknown>[]>((resolve) =>
+      resolve(jsonData.records),
+    );
 
     // Don't hit the API too fast
     if (offset && delay) {
@@ -109,7 +111,7 @@ async function* allRecords(
 }
 
 function write(
-  baseData: Map<string, AirtableRecord[]> | unknown[],
+  baseData: Map<string, Record<string, unknown>[]> | unknown[],
   outputPath: string,
 ): void {
   ensureDirSync(outputPath);
