@@ -1,16 +1,8 @@
-import {
-  brightGreen,
-  cyan,
-  ensureDirSync,
-  italic,
-  join,
-  parse,
-  red,
-  sleep,
-  yellow,
-} from "./deps.ts";
-import { AirtableRecord } from "./airtable.ts";
-import { reshape } from "./transform.ts";
+import { brightGreen, cyan, italic, red, yellow } from "std/fmt/colors";
+import { parse } from "std/flags";
+import { sleep } from "sleep";
+import { join } from "std/path";
+import { ensureDirSync } from "std/fs";
 
 async function getAirtableData(
   baseId: string,
@@ -19,12 +11,12 @@ async function getAirtableData(
   httpReadTimeout: number,
   userAgent?: string | null,
   delay = 0.2,
-): Promise<Map<string, AirtableRecord[]>> {
+): Promise<Map<string, Record<string, unknown>[]>> {
   console.log(
     `Connecting to ${cyan(`https://api.airtable.com/v0/${baseId}`)} …`,
   );
 
-  const airtableData = new Map<string, AirtableRecord[]>();
+  const airtableData = new Map<string, Record<string, unknown>[]>();
 
   // Main loop over all tables
   for (const table of tables) {
@@ -34,7 +26,7 @@ async function getAirtableData(
     // yielded so that's why we have a list of lists here.
     //
     // Below we use flat() to flatten the list of lists into a single list.
-    const records: Array<AirtableRecord[]> = [];
+    const records: Array<Record<string, unknown>[]> = [];
 
     const tableRecords = allRecords(
       baseId,
@@ -72,7 +64,7 @@ async function* allRecords(
   httpReadTimeout?: number,
   userAgent?: string | null,
   delay?: number,
-): AsyncGenerator<AirtableRecord[], void, void> {
+): AsyncGenerator<Record<string, unknown>[], void, void> {
   //   Prepare the request
   const _headers: Array<string[]> = [];
   if (userAgent) {
@@ -105,7 +97,9 @@ async function* allRecords(
     });
     const jsonData = await jsonResponse.json();
     offset = jsonData.offset;
-    yield new Promise<AirtableRecord[]>((resolve) => resolve(jsonData.records));
+    yield new Promise<Record<string, unknown>[]>((resolve) =>
+      resolve(jsonData.records),
+    );
 
     // Don't hit the API too fast
     if (offset && delay) {
@@ -117,7 +111,7 @@ async function* allRecords(
 }
 
 function write(
-  baseData: Map<string, AirtableRecord[]> | unknown[],
+  baseData: Map<string, Record<string, unknown>[]> | unknown[],
   outputPath: string,
 ): void {
   ensureDirSync(outputPath);
@@ -155,7 +149,6 @@ const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
 const userAgent: string = flags.userAgent || "curl/7.77.0";
 const outputDir: string = flags.outputDir || "./dist";
 
-const ONLYWEB = ["Composite_Objects", "Items", "Subjects", "Entities"];
 const ALLTABLES = [
   "Items",
   "Composite_Objects",
@@ -179,24 +172,10 @@ if (base && key) {
       userAgent,
     );
     write(allBaseData, join(outputDir, "data", "raw"));
-  } else {
-    const websiteData = await getAirtableData(
-      base,
-      ONLYWEB,
-      key,
-      httpReadTimeout,
-      userAgent,
-    );
-    try {
-      const transformedData = reshape(websiteData);
-      write(transformedData, join(outputDir, "data", "api"));
-    } catch (e) {
-      console.error(e);
-      Deno.exit(1);
-    }
   }
 } else {
   console.error(
     red("Error: AIRTABLE_BASE_ID and AIRTABLE_API_KEY must be set"),
   );
+  Deno.exit(1);
 }
