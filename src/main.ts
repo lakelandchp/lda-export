@@ -149,7 +149,6 @@ const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
 const userAgent: string = flags.userAgent || "curl/7.77.0";
 const outputDir: string = flags.outputDir || "./dist";
 
-const ONLYWEB = ["Composite_Objects", "Items", "Subjects", "Entities"];
 const ALLTABLES = [
   "Items",
   "Composite_Objects",
@@ -173,24 +172,10 @@ if (base && key) {
       userAgent,
     );
     write(allBaseData, join(outputDir, "data", "raw"));
-  } else {
-    const websiteData = await getAirtableData(
-      base,
-      ONLYWEB,
-      key,
-      httpReadTimeout,
-      userAgent,
-    );
-    try {
-      const transformedData = reshape(websiteData);
-      write(transformedData, join(outputDir, "data", "api"));
-    } catch (e) {
-      console.error(e);
-      Deno.exit(1);
-    }
   }
 } else {
   console.error(
     red("Error: AIRTABLE_BASE_ID and AIRTABLE_API_KEY must be set"),
   );
+  Deno.exit(1);
 }
