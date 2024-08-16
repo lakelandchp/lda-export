@@ -1,0 +1,5 @@
+GET https://api.airtable.com/v0/meta/bases/{{AIRTABLE_BASE_ID}}/tables
+Content-Type: application/json
+User-Agent: curl/7.64.1
+Authorization: Bearer {{AIRTABLE_API_KEY}}
+

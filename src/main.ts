@@ -4,7 +4,7 @@ import { sleep } from "sleep";
 import { join } from "std/path";
 import { ensureDirSync } from "std/fs";
 import { FetchOptions, AirtableResponse } from "./types.ts";
-
+import { tableNames } from "./extractTableInfo.ts";
 export async function getAirtableData(
   baseId: string,
   tables: string[],
@@ -156,19 +156,8 @@ export async function main() {
   const userAgent: string = flags.userAgent || "curl/7.77.0";
   const outputDir: string = flags.outputDir || "./dist";
 
-  const ALLTABLES = [
-    "Items",
-    "Composite_Objects",
-    "Entities",
-    "Locations",
-    "Subjects",
-    "Relationships",
-    "Item_Admin_Info",
-    "Person_Admin_Info",
-    "Lakeland_Book",
-    "Lakeland_Tour_Sites",
-  ];
-
+  // Pull the current table names from the latest API response
+  const ALLTABLES = tableNames;
   if (base && key) {
     if (flags.backup) {
       try {
