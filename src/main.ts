@@ -4,7 +4,7 @@ import { sleep } from "sleep";
 import { join } from "std/path";
 import { ensureDirSync } from "std/fs";
 import { FetchOptions, AirtableResponse } from "./types.ts";
-import { tableNames } from "./extractTableInfo.ts";
+import { tableNames } from "./metadata/extractTableInfo.ts";
 export async function getAirtableData(
   baseId: string,
   tables: string[],
