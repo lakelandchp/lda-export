@@ -5,6 +5,7 @@ import { join } from "std/path";
 import { ensureDirSync } from "std/fs";
 import { FetchOptions, AirtableResponse } from "./types.ts";
 import { tableNames } from "./metadata/extractTableInfo.ts";
+import { removeRecords } from "./utils/removeRecords.ts";
 export async function getAirtableData(
   baseId: string,
   tables: string[],
@@ -155,6 +156,7 @@ export async function main() {
   // Default to curl user agent to look basic
   const userAgent: string = flags.userAgent || "curl/7.77.0";
   const outputDir: string = flags.outputDir || "./dist";
+  const dryrun: boolean = flags.dryrun || false;
 
   // Pull the current table names from the latest API response
   const ALLTABLES = tableNames;
@@ -176,6 +178,10 @@ export async function main() {
       } catch (error) {
         console.error(red(`Unhandled error in getAirtableData: ${error}`));
         Deno.exit(1);
+      }
+    } else if (flags.remove) {
+      if (dryrun) {
+        await removeRecords({ dryrun: true });
       }
     }
   } else {
