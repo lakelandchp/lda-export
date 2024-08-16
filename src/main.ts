@@ -3,20 +3,8 @@ import { parse } from "std/flags";
 import { sleep } from "sleep";
 import { join } from "std/path";
 import { ensureDirSync } from "std/fs";
+import { FetchOptions, AirtableResponse } from "./types.ts";
 
-interface FetchOptions {
-  baseId: string;
-  tableName: string;
-  apiKey: string;
-  httpReadTimeout?: number;
-  userAgent?: string | null;
-  delay?: number;
-}
-
-interface AirtableResponse {
-  records: Record<string, unknown>[];
-  offset?: string;
-}
 export async function getAirtableData(
   baseId: string,
   tables: string[],
