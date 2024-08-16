@@ -109,10 +109,11 @@ async function* allRecords(
         signal: controller.signal,
       });
 
-      const jsonData: AirtableResponse = await jsonResponse.json();
-      yield jsonData.records;
-      offset = jsonData.offset;
-
+      if (jsonResponse.ok) {
+        const jsonData: AirtableResponse = await jsonResponse.json();
+        yield jsonData.records;
+        offset = jsonData.offset;
+      }
       // Don't hit the API too fast
       if (offset && delay) {
         await sleep(delay);
