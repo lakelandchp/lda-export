@@ -9,7 +9,6 @@ async function getDataFiles(
   targetDir: string = defaultSearchDir,
   sort?: "asc" | "desc",
 ) {
-  console.log("🪚 targetDir in getDataFiles:", targetDir);
   const files: { path: string; mtime: Date | null }[] = [];
 
   if (typeof fileName === "string") {
