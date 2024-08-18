@@ -1,10 +1,14 @@
-export interface FetchOptions {
+export interface AirtableConfig {
   baseId: string;
-  tableName: string;
   apiKey: string;
   httpReadTimeout?: number;
   userAgent?: string | null;
   delay?: number;
+  fetchFn?: typeof fetch;
+}
+
+export interface FetchOptions extends AirtableConfig {
+  tableName: string;
 }
 
 export interface AirtableRecord {
