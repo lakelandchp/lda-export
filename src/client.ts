@@ -3,9 +3,6 @@ import { sleep } from "sleep";
 import { AirtableConfig } from "./types.ts";
 
 export interface IAirtableClient {
-  getAllRecords(
-    tableName: string,
-  ): AsyncGenerator<Record<string, unknown>[], void, void>;
   getTableData(tableName: string): Promise<Record<string, unknown>[]>;
   getAllTablesData(
     tableNames: string[],
@@ -15,7 +12,7 @@ export interface IAirtableClient {
 const BASE_API_URL =
   Deno.env.get("AIRTABLE_API_URL") || "https://api.airtable.com/v0";
 
-export class AirtableClient {
+export class AirtableClient implements IAirtableClient {
   private static instance: AirtableClient | null = null;
   private config: AirtableConfig;
   private fetchFn: typeof fetch;
