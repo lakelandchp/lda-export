@@ -1,3 +1,5 @@
+import { ensureDirSync } from "std/fs";
+import { yellow } from "std/fmt/colors";
 import { Database } from "@db/sqlite";
 import * as TableStatements from "../db/tables.ts";
 import { IWriter, WriterConfig } from "../types.ts";
@@ -17,6 +19,7 @@ export class SQLiteWriter implements IWriter {
     this.config = { ...config };
 
     this.outputDir = this.config.outputDir;
+    ensureDirSync(this.config.outputDir);
     this.db = this.config.db || new Database(this.getDatabasePath());
     this.initializeTables();
   }
@@ -39,7 +42,9 @@ export class SQLiteWriter implements IWriter {
 
     try {
       initializeTablesTransaction();
-      console.log("Database tables and indexes initialized successfully");
+      console.log(
+        yellow("Database tables and indexes initialized successfully 🌱"),
+      );
     } catch (error) {
       console.error("Error initializing database tables:", error);
       throw new Error("Failed to initialize database tables");

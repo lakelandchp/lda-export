@@ -12,7 +12,7 @@ export async function main() {
   const httpReadTimeout: number = parseInt(flags.httpReadTimeout) || 60;
   // Default to curl user agent to look basic for Airtable
   const userAgent: string = flags.userAgent || "curl/7.77.0";
-  const outputDir: string = flags.outputDir || "./dist";
+  const outputDir: string = flags.outputDir || "./dist/data";
   const dryrun: boolean = flags.dryrun || false;
 
   try {
