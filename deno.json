@@ -8,12 +8,13 @@
     "std/flags": "https://deno.land/std@0.119.0/flags/mod.ts",
     "std/fmt/colors": "https://deno.land/std@0.119.0/fmt/colors.ts",
     "std/fs": "https://deno.land/std@0.119.0/fs/mod.ts",
-    "std/path": "https://deno.land/std@0.119.0/path/mod.ts"
+    "std/path": "https://deno.land/std@0.119.0/path/mod.ts",
+    "@db/sqlite": "jsr:@db/sqlite@0.12"
   },
   "tasks": {
-    "run": "deno run --allow-env=AIRTABLE_API_URL,AIRTABLE_BASE_ID,AIRTABLE_API_KEY,SCHEMA_DIR,DATA_DIR --allow-net=api.airtable.com --allow-read=.env,./dist/data/raw,./tests/fixtures/responses --allow-write=. ./src/main.ts ",
+    "run": "deno run --unstable-ffi --allow-env=AIRTABLE_API_URL,AIRTABLE_BASE_ID,AIRTABLE_API_KEY,SCHEMA_DIR,DATA_DIR --allow-net=api.airtable.com --allow-read=.env,./dist/data/raw,./tests/fixtures/responses --allow-write=. ./src/main.ts ",
     "backup": "deno task run --backup",
     "test": "deno test --allow-read=./tests/",
-    "update:delete": "deno task run --remove --dryrun"
+    "update:delete": "deno task run --remove"
   }
 }

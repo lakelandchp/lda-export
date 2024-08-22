@@ -1,3 +1,12 @@
+export interface WriterConfig {
+  outputDir: string;
+}
+
+export interface IWriter {
+  readonly outputDir: string;
+  writeData(baseData: Map<string, Record<string, unknown>[]> | unknown[]): void;
+}
+
 export interface AirtableConfig {
   baseId: string;
   apiKey: string;

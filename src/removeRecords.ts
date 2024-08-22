@@ -1,19 +1,15 @@
-import { getLatestFile } from "./fileLoader.ts";
-import { AirtableRecord } from "../types.ts";
+import { getLatestFile } from "./utils/fileLoader.ts";
+import { AirtableRecord } from "./types.ts";
 
 const itemRegex = /^Items.*\.json$/;
 
 // This currently only identifies records that have the "remove (from linked_admin_info)" field set to true
-// and logs the record id and title to the console.
-// TODO: flesh this out into a function that identifies records to remove then removed them via the Airtable API
+// TODO: complete this function to remove records from Airtable
 type RemoveOptions = {
   dryrun: boolean;
 };
 
-export async function removeRecords(
-  options: RemoveOptions = { dryrun: false },
-) {
-  const { dryrun } = options;
+export async function identifyRecordsToRemove() {
   const itemData = await getLatestFile(itemRegex);
 
   if (!itemData || !Array.isArray(itemData)) {
@@ -36,13 +32,25 @@ export async function removeRecords(
     }
   }
 
-  if (recordsToRemove.length > 0) {
+  return recordsToRemove;
+}
+
+export async function removeRecords(
+  options: RemoveOptions = { dryrun: false },
+) {
+  const { dryrun } = options;
+
+  const recordsToRemove = await identifyRecordsToRemove();
+  if (recordsToRemove && recordsToRemove.length > 0) {
     console.log(`Found ${recordsToRemove.length} records to remove.`);
+    if (dryrun) {
+      console.log("Printing the first record...");
+      console.log(recordsToRemove[0]);
+      return;
+    } else {
+      console.log("Removing records...");
+    }
   } else {
     console.log("No records to remove.");
-  }
-
-  if (dryrun) {
-    return;
   }
 }

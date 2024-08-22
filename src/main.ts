@@ -1,38 +1,9 @@
 import { brightGreen, cyan, italic, red, yellow } from "std/fmt/colors";
 import { parse } from "std/flags";
-import { join } from "std/path";
-import { ensureDirSync } from "std/fs";
 import { getAirtableClient, AirtableClient } from "./client.ts";
 import { tableNames } from "./metadata/extractTableInfo.ts";
-import { removeRecords } from "./utils/removeRecords.ts";
-
-function writeData(
-  baseData: Map<string, Record<string, unknown>[]> | unknown[],
-  outputPath: string,
-  logger: typeof console,
-): void {
-  ensureDirSync(outputPath);
-
-  if (baseData instanceof Map) {
-    for (const [tableName, records] of baseData) {
-      const fileName = `${outputPath}/${tableName}.json`;
-      try {
-        Deno.writeTextFileSync(fileName, JSON.stringify(records));
-        logger.log(`Records written to ${cyan(fileName)}`);
-      } catch (e) {
-        logger.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
-      }
-    }
-  } else {
-    const fileName = `${outputPath}/LDA.json`;
-    try {
-      Deno.writeTextFileSync(fileName, JSON.stringify(baseData));
-      logger.log(`Records written to ${cyan(fileName)}`);
-    } catch (e) {
-      logger.error(red(`Could not write to ${cyan(fileName)}. Error: ${e}`));
-    }
-  }
-}
+import { removeRecords } from "./removeRecords.ts";
+import { getJSONWriter, getSQLiteWriter } from "./writer/index.ts";
 
 export async function main() {
   const flags = parse(Deno.args);
@@ -53,13 +24,24 @@ export async function main() {
     // Pull the current table names from the latest API response
     const ALLTABLES = tableNames;
 
+    // Default to JSON writer unless sqlite is specified
+    let writer;
+    if (flags.sqlite) {
+      writer = getSQLiteWriter({ outputDir });
+    } else {
+      writer = getJSONWriter({ outputDir });
+    }
+    console.log(brightGreen(`Writing to ${writer.outputDir}`));
+
     if (flags.backup) {
       const allBaseData = await client.getAllTablesData(ALLTABLES);
 
-      writeData(allBaseData, join(outputDir, "data", "raw"), console);
+      writer.writeData(allBaseData);
     } else if (flags.remove) {
       if (dryrun) {
         await removeRecords({ dryrun: true });
+      } else {
+        await removeRecords();
       }
     }
   } catch (error) {
