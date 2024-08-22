@@ -1,4 +1,4 @@
-import { brightGreen, cyan, italic, red, yellow } from "std/fmt/colors";
+import { brightGreen, red } from "std/fmt/colors";
 import { parse } from "std/flags";
 import { getAirtableClient, AirtableClient } from "./client.ts";
 import { tableNames } from "./metadata/extractTableInfo.ts";
