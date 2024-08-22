@@ -12,7 +12,7 @@
     "@db/sqlite": "jsr:@db/sqlite@0.12"
   },
   "tasks": {
-    "run": "deno run --unstable-ffi --allow-env=AIRTABLE_API_URL,AIRTABLE_BASE_ID,AIRTABLE_API_KEY,SCHEMA_DIR,DATA_DIR --allow-net=api.airtable.com --allow-read=.env,./dist/data/raw,./tests/fixtures/responses --allow-write=. ./src/main.ts ",
+    "run": "deno run --allow-ffi --unstable-ffi --allow-env --allow-net=api.airtable.com --allow-read --allow-write=. ./src/main.ts ",
     "backup": "deno task run --backup",
     "test": "deno test --allow-read=./tests/",
     "update:delete": "deno task run --remove"
