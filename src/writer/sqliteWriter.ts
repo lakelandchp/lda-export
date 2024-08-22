@@ -2,7 +2,9 @@ import { ensureDirSync } from "std/fs";
 import { yellow } from "std/fmt/colors";
 import { Database } from "@db/sqlite";
 import * as TableStatements from "../db/tables.ts";
-import { insertRecordsSQL } from "../db/inserts.ts";
+import { insertRecordsSQL, insertOperationsSQL } from "../db/inserts.ts";
+import { deleteItemRecordsSQL } from "../db/deletes.ts";
+import { getItemQuery, getItemFromOperationQuery } from "../db/queries.ts";
 import { sanitizeSQLiteTableName } from "../utils/sanitizeNames.ts";
 import { IWriter, WriterConfig, AirtableRecord } from "../types.ts";
 
@@ -40,7 +42,11 @@ export class SQLiteWriter implements IWriter {
 
     const initializeTablesTransaction = this.db.transaction(() => {
       this.db.exec(TableStatements.createOperationTypesTableSQL);
-      this.db.exec(TableStatements.populateOperationTypesTableSQL);
+      this.db.exec(TableStatements.populateOperationTypesTableSQL, [
+        TableStatements.OperationTypeId.CREATE,
+        TableStatements.OperationTypeId.UPDATE,
+        TableStatements.OperationTypeId.DELETE,
+      ]);
       this.db.exec(TableStatements.createOperationsTableSQL);
       this.db.exec(TableStatements.createOperationsTableIndexesSQL);
     });
@@ -146,6 +152,92 @@ export class SQLiteWriter implements IWriter {
     } else {
       throw new Error("Invalid data type passed to SQLiteWriter");
     }
+  }
+
+  private writeOperation(
+    tableName: string,
+    recordQueryResult: unknown[],
+    operationTypeId: TableStatements.OperationTypeId,
+  ) {
+    const insertOperationStatement = this.db.prepare(insertOperationsSQL);
+
+    //TODO: Make this less dependent on knowing the field order of the query result
+    const [, airtableId, , recordSnapshot] = recordQueryResult;
+    if (typeof airtableId !== "string") {
+      throw new Error("Invalid airtableId in recordQueryResult");
+    }
+    try {
+      insertOperationStatement.run(
+        airtableId,
+        operationTypeId,
+        new Date().toISOString(),
+        JSON.stringify(recordSnapshot),
+      );
+    } catch (error) {
+      console.error(`Error writing operation to table ${tableName}`, error);
+      console.log(airtableId, operationTypeId, recordSnapshot);
+      throw new Error(
+        `Failed to write operation to table ${tableName}`,
+        error.message,
+      );
+    }
+  }
+
+  deleteItemRecords(airtableIds: string[]) {
+    const retrieveItemQueryStatement = this.db.prepare(getItemQuery);
+    const deleteRecordsStatement = this.db.prepare(deleteItemRecordsSQL);
+    const batchDelete = this.db.transaction(() => {
+      for (const airtableId of airtableIds) {
+        const itemRecordQueryResult =
+          retrieveItemQueryStatement.value(airtableId);
+        // the record, if it exists, will come back as an array of field values
+        if (!itemRecordQueryResult || itemRecordQueryResult.length === 0) {
+          console.log(`No item record found for ${airtableId}`);
+          continue;
+        }
+
+        deleteRecordsStatement.run(airtableId);
+
+        this.writeOperation(
+          "Items",
+          itemRecordQueryResult,
+          TableStatements.OperationTypeId.DELETE,
+        );
+      }
+    });
+    try {
+      batchDelete();
+    } catch (error) {
+      console.error(`Error deleting records from database`, error);
+      throw new Error(`Failed to delete records from database`);
+    }
+  }
+
+  private isStringArray(arr: unknown): arr is string[] {
+    return Array.isArray(arr) && arr.every((item) => typeof item === "string");
+  }
+  restoreItemRecords(airtableIds: string[]) {
+    const recordSnapshotQueryStatement = this.db.prepare(
+      getItemFromOperationQuery,
+    );
+
+    const recordSnapshots: string[] = [];
+
+    for (const airtableId of airtableIds) {
+      const recordSnapshotQueryResult =
+        recordSnapshotQueryStatement.value(airtableId);
+      if (
+        !recordSnapshotQueryResult ||
+        !this.isStringArray(recordSnapshotQueryResult) ||
+        recordSnapshotQueryResult.length === 0
+      ) {
+        console.log(`No item record found for ${airtableId}`);
+        continue;
+      }
+
+      recordSnapshots.push(recordSnapshotQueryResult[0]);
+    }
+    return recordSnapshots;
   }
 }
 export function getSQLiteWriter(

@@ -1,4 +1,4 @@
-import { AirtableResponse } from "./types.ts";
+import { AirtableRecord, AirtableResponse } from "./types.ts";
 import { sleep } from "sleep";
 import { AirtableConfig } from "./types.ts";
 
@@ -7,6 +7,17 @@ export interface IAirtableClient {
   getAllTablesData(
     tableNames: string[],
   ): Promise<Map<string, Record<string, unknown>[]>>;
+  deleteItemRecords(recordIds: string[]): Promise<DeletedRecords>;
+  restoreItemRecord(recordIds: AirtableRecord["fields"]): void;
+}
+
+interface DeletedRecord {
+  id: string;
+  deleted: boolean;
+}
+
+interface DeletedRecords {
+  records: DeletedRecord[];
 }
 
 const BASE_API_URL =
@@ -122,6 +133,88 @@ export class AirtableClient implements IAirtableClient {
     }
 
     return allData;
+  }
+
+  private checkRecordListLength(recordList: string[]) {
+    if (recordList.length === 0) {
+      return { records: [] };
+    }
+    if (recordList.length > 10) {
+      throw new Error(
+        "Airtable API only supports deleting up to 10 records at a time",
+      );
+    }
+  }
+  async deleteItemRecords(recordIds: string[]): Promise<DeletedRecords> {
+    this.checkRecordListLength(recordIds);
+
+    const url = new URL(`${BASE_API_URL}/${this.config.baseId}/Items`);
+    recordIds.forEach((id) => url.searchParams.append("records[]", id));
+
+    const headers = this.constructHeaders();
+    const { controller, controllerId } = this.constructAbortController();
+
+    try {
+      const response = await this.fetchFn(url.toString(), {
+        method: "DELETE",
+        headers,
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error ${response.status}: ${await response.text()}`,
+        );
+      }
+
+      const result: DeletedRecords = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Error deleting Item records", error);
+      throw error;
+    } finally {
+      clearTimeout(controllerId);
+    }
+  }
+
+  async restoreItemRecord(record: AirtableRecord["fields"]): Promise<void> {
+    const url = new URL(`${BASE_API_URL}/${this.config.baseId}/Items`);
+    const headers = this.constructHeaders();
+    headers.set("Content-Type", "application/json");
+    const { controller, controllerId } = this.constructAbortController();
+
+    const disallowedFields = ["Airtable Record ID"];
+
+    const sanitizedRecord = Object.fromEntries(
+      Object.entries(record).filter(([key]) => !disallowedFields.includes(key)),
+    );
+
+    const body = JSON.stringify({
+      records: [{ fields: sanitizedRecord }],
+    });
+
+    try {
+      const response = await this.fetchFn(url.toString(), {
+        method: "POST",
+        headers,
+        body,
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error ${response.status}: ${await response.text()}`,
+        );
+      }
+
+      const result = await response.json();
+      console.log("Record restored successfully:", result);
+    } catch (error) {
+      console.error("Error deleting Item records", error);
+      throw error;
+    } finally {
+      clearTimeout(controllerId);
+    }
   }
 }
 

@@ -15,8 +15,16 @@ CREATE TABLE IF NOT EXISTS operationTypes (
   operationType TEXT NOT NULL UNIQUE
 )`;
 
+export const OperationTypeId = {
+  CREATE: 1,
+  UPDATE: 2,
+  DELETE: 3,
+} as const;
+export type OperationTypeId =
+  (typeof OperationTypeId)[keyof typeof OperationTypeId];
+
 export const populateOperationTypesTableSQL = `
-INSERT OR IGNORE INTO operationTypes (operationType) VALUES ('CREATE'), ('UPDATE'), ('DELETE');
+INSERT OR IGNORE INTO operationTypes (operationType) VALUES (?), (?), (?);
 `;
 
 export const createOperationsTableSQL = `

@@ -2,7 +2,7 @@ import { brightGreen, red } from "std/fmt/colors";
 import { parse } from "std/flags";
 import { getAirtableClient, AirtableClient } from "./client.ts";
 import { tableNames } from "./metadata/extractTableInfo.ts";
-import { removeRecords } from "./removeRecords.ts";
+import { removeRecords, restoreRecords } from "./removeRecords.ts";
 import { getJSONWriter, getSQLiteWriter } from "./writer/index.ts";
 
 export async function main() {
@@ -42,6 +42,12 @@ export async function main() {
         await removeRecords({ dryrun: true });
       } else {
         await removeRecords();
+      }
+    } else if (flags.restore) {
+      if (dryrun) {
+        await restoreRecords([flags.restore], { dryrun: true });
+      } else {
+        await restoreRecords([flags.restore]);
       }
     }
   } catch (error) {
