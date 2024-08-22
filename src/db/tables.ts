@@ -1,14 +1,13 @@
-export const createRecordsTableSQL = `
-CREATE TABLE IF NOT EXISTS records (
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-    airtableId TEXT NOT NULL UNIQUE,
-    airtableCreationTime DATETIME NOT NULL,
-    fields JSON NOT NULL
-)`;
+export const createTableSQL = (tableName: string) => `
+      CREATE TABLE IF NOT EXISTS ${tableName} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        airtableId TEXT NOT NULL UNIQUE,
+        airtableCreationTime DATETIME NOT NULL,
+        fields JSON NOT NULL
+      )`;
 
-export const createRecordsTableIndexesSQL = `
-CREATE INDEX IF NOT EXISTS idx_records_airtableId ON records (airtableId);
-`;
+export const createIndexSQL = (tableName: string) => `
+CREATE INDEX IF NOT EXISTS idx_${tableName}_airtableId ON ${tableName} (airtableId)`;
 
 export const createOperationTypesTableSQL = `
 CREATE TABLE IF NOT EXISTS operationTypes (
