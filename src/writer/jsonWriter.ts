@@ -18,7 +18,7 @@ export class JSONWriter implements IWriter {
   static getInstance(config?: WriterConfig): JSONWriter {
     if (!JSONWriter.instance) {
       const defaultConfig: WriterConfig = {
-        outputDir: Deno.env.get("OUTPUT_DIR") || "./dist/data/raw",
+        outputDir: Deno.env.get("OUTPUT_DIR") || "./dist/data",
       };
       JSONWriter.instance = new JSONWriter(config || defaultConfig);
     }

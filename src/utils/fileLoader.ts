@@ -2,7 +2,7 @@ import { walk } from "std/fs";
 import { resolvePath } from "./pathUtils.ts";
 
 const defaultSearchDir =
-  Deno.env.get("DATA_DIR") || resolvePath("dist", "data", "raw");
+  Deno.env.get("DATA_DIR") || resolvePath("dist", "data");
 
 async function getDataFiles(
   fileName: string | RegExp,
