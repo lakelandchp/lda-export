@@ -26,10 +26,8 @@ export async function identifyRecordsToRemove() {
     // console.log("id", record.id);
     if (record.fields) {
       if (
-        // "remove (from linked_admin_info)" in record.fields &&
-        // record.fields["remove (from linked_admin_info)"][0] === true
-        // Test with dummy record
-        record.id === "recnCbAit8RJGUdmb"
+        "remove (from linked_admin_info)" in record.fields &&
+        record.fields["remove (from linked_admin_info)"][0] === true
       ) {
         recordsToRemove.push(record);
         console.log("Found record to remove:", record);
