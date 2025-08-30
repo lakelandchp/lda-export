@@ -155,6 +155,9 @@ export class AirtableClient implements IAirtableClient {
     const { controller, controllerId } = this.constructAbortController();
 
     try {
+      console.log(`Delay configured for ${this.config.delay}`);
+      await sleep(this.config.delay ? this.config.delay : 0.2);
+
       const response = await this.fetchFn(url.toString(), {
         method: "DELETE",
         headers,
